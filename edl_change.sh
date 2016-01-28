@@ -8,6 +8,14 @@ import scala.util.matching.Regex
 import language.postfixOps
 import scala.collection.JavaConverters._
 
+val sourceFilesPattern = "(?<=SOURCE FILE: )(.*$)".r()
+val clipNamesPattern = "(?<=CLIP NAME: )(.*$)".r()
+val reelNamesPattern = "(?<=0[0-9][0-9]\\s)(.*)(?=\\s(V|B)\\s)"
+
+def fromPattern(pattern: Regex): List[String] = {
+  fileLines map (pattern findFirstIn(_).trim) flatten
+}
+    
   def main(args: Array[String]) {
 
     if (args.isEmpty) {
@@ -18,15 +26,8 @@ import scala.collection.JavaConverters._
     val filename = args(0)
     val inputLines = io.Source.fromFile(filename).getLines().toList
     val fileLines = inputLines filter (line => !(line contains " BL "))
-
-    val sourceFilesPattern = "(?<=SOURCE FILE: )(.*$)".r()
-    val clipNamesPattern = "(?<=CLIP NAME: )(.*$)".r()
-    val reelNamesPattern = "(?<=0[0-9][0-9]\\s)(.*)(?=\\s(V|B)\\s)"
-
-    def fromPattern(pattern: Regex): List[String] = {
-      fileLines map (pattern findFirstIn(_).trim) flatten
-    }
     val reelLines = fileLines filter (line => line matches "(0[0-9][0-9]\\s.*)")
+
     val fromComments = fromPattern(sourceFilesPattern) ++ fromPattern(clipNamesPattern)
 
     if (reelLines.size != fromComments.size)
